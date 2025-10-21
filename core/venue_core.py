@@ -1398,7 +1398,6 @@ def get_custom_script_status(script_run_id):
     logger.error(msg)
     raise Exception(msg)
 
-  logger.debug(f'Output file content: {output_json}')
 
   # extract script status & outputs from output json 
   script_status = output_json.get('custom_script_status')
