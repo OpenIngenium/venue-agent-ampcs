@@ -682,7 +682,6 @@ def script_halt(script_run_id, response: Response):
 
 
 @prefix_router.get('/custom_script/{script_run_id}/files',
-                    response_class=FileResponse,
                     responses={
                         200: {'content': {'application/gzip': {}}},
                         400: {'model': ErrorResponse},
@@ -782,10 +781,10 @@ async def log_request(request: Request, call_next):
     return response
 
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request, exc):
-    error_json_str = json.dumps(exc.json(indent=None))
-    return JSONResponse(status_code=400, 
-        content={'message': str(exc)})
+async def validation_exception_handler(request: Request, exc:RequestValidationError):
+    error_payload = {"detail": exc.errors()}
+    return JSONResponse(status_code=400,
+        content=error_payload)
 
 
 ### OPENAPI ###
