@@ -10,7 +10,7 @@ usage() {
     Options:
       -f ENV_FILE: path to a file that defines environment variables (required)
     Example:
-      $0 -f config/europa_dev_envs.sh
+      $0 -f config/venueserver_dev_envs.sh
   "
 }
 
