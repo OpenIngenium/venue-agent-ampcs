@@ -1022,16 +1022,6 @@ components:
           description: Verification status for the specified entry
       title: ScriptEntriesModel
       type: object
-    ScriptHaltBodyModel:
-      properties:
-        scriptRunId:
-          description: custom script ID for the running custom script
-          title: Scriptrunid
-          type: string
-      required:
-      - scriptRunId
-      title: ScriptHaltBodyModel
-      type: object
     ScriptRunInfo:
       properties:
         scriptRunId:
@@ -1071,16 +1061,6 @@ components:
       - scriptPath
       - scriptHash
       title: ScriptStartBodyModel
-      type: object
-    ScriptStatusBodyModel:
-      properties:
-        scriptRunId:
-          description: custom script ID for the running custom script
-          title: Scriptrunid
-          type: string
-      required:
-      - scriptRunId
-      title: ScriptStatusBodyModel
       type: object
     ScriptStatusResp:
       properties:
@@ -1425,15 +1405,16 @@ paths:
       summary: Send a SSE command via MTAK
       tags:
       - COMMAND
-  /api/v3/custom_script/halt:
+  /api/v3/custom_script/{script_run_id}/halt:
     post:
       operationId: script_halt_api_v3_custom_script_halt_post
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ScriptHaltBodyModel'
-        required: true
+      parameters:
+        - in: path
+          name: script_run_id
+          required: true
+          schema:
+            title: Script Run Id
+            type: string
       responses:
         '204':
           description: Successful Response
@@ -1457,7 +1438,7 @@ paths:
           description: Forbidden
       summary: Halt custom script specified
       tags:
-      - SCRIPT
+        - SCRIPT
   /api/v3/custom_script/start:
     post:
       description: This will start the custom script and return. Use status endpoint
@@ -1497,15 +1478,16 @@ paths:
       summary: Start execution of a custom script
       tags:
       - SCRIPT
-  /api/v3/custom_script/status:
+  /api/v3/custom_script/{script_run_id}:
     get:
       operationId: script_status_api_v3_custom_script_status_get
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ScriptStatusBodyModel'
-        required: true
+      parameters:
+        - in: path
+          name: script_run_id
+          required: true
+          schema:
+            title: Script Run Id
+            type: string
       responses:
         '200':
           content:
@@ -1533,7 +1515,7 @@ paths:
           description: Forbidden
       summary: Retrieve status information from currently executing script
       tags:
-      - SCRIPT
+        - SCRIPT
   /api/v3/custom_script/{script_run_id}/files:
     get:
       operationId: script_file_api_v3_custom_script__script_run_id__files_get
