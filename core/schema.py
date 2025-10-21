@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, Extra
+from pydantic import BaseModel, Field, Extra, validator
 from typing import List, Union
 from enum import Enum
 
@@ -311,6 +311,17 @@ class ScriptStartBodyModel(BaseModel):
     inputs: dict = Field({}, description='Dictionary of custom script inputs and corresponding values')
     # service accepts empty outputs
     outputs: dict = Field({}, description='Dictionary of custom script outputs')
+
+    # This checks to ensure that the custom script location doesn't include an absolute path, or path short cuts
+    @validator('scriptPath')
+    def script_path_must_be_relative(cls, v:str)->str:
+        if Path(v).is_absolute():
+            raise ValueError('scriptPath must be relative path, not an absolute path')
+        if ".." in Path(v).parts:
+            raise ValueError('scriptPath must not include ..')
+        if "~" in Path(v).parts:
+            raise ValueError('scriptPath must not include ~')
+        return v
 
 class ScriptRunInfo(BaseModel):
     scriptRunId: str = Field(description='id of the running script')
