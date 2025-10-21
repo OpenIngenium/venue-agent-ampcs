@@ -86,8 +86,6 @@ echo "Installing AMPCS Python dependencies from $AMPCS_REQUIREMENTS"
 python -m pip install -r "$AMPCS_REQUIREMENTS"
 echo "Installing Python dependencies from $REQUIREMENTS"
 python -m pip install -r "$REQUIREMENTS"
-# uvicorn requires click version 7 or later
-pip install --ignore-installed "click>=7.0.0"
 
 #
 # Generate nginx configuration file
