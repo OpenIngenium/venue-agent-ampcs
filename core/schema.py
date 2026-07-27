@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, Extra, validator
 from typing import List, Union
 from enum import Enum
+from pathlib import Path
 
 class DefaultCmdString(str, Enum):
     A = 'A'
