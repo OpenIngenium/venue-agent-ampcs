@@ -61,7 +61,7 @@ then
     echo "Use existing Python virtual env: $VENV_DIR"
 else
     echo "Creating a Python virtual env: $VENV_DIR"
-    python3.9 -m venv $VENV_DIR
+    python3.6 -m venv $VENV_DIR
 fi
 
 AMPCS_REQUIREMENTS="$ING_MTAK_DIR/ampcs_requirements.txt"
