@@ -637,7 +637,7 @@ def script_start(body: ScriptStartBodyModel, request: Request, response: Respons
         return ErrorResponse(message=f'{msg}. {traceback.format_exc()}')
 
 
-@prefix_router.get('/custom_script/status',
+@prefix_router.get('/custom_script/{script_run_id}',
                     responses={
                         200: {'model': ScriptStatusResp},
                         400: {'model': ErrorResponse},
@@ -647,19 +647,19 @@ def script_start(body: ScriptStartBodyModel, request: Request, response: Respons
                     summary='Retrieve status information from currently executing script',
                     tags=['SCRIPT']
                 )
-def script_status(body: ScriptStatusBodyModel, response: Response):
+def script_status(script_run_id: str, response: Response):
     try:
-        res_dict = venue_core.get_custom_script_status(script_run_id=body.scriptRunId)
+        res_dict = venue_core.get_custom_script_status(script_run_id=script_run_id)
         return JSONResponse(status_code=200, content=res_dict)
 
     except Exception as e:
-        msg = f'Failed to get the status of custom script: {body.scriptRunId}'
+        msg = f'Failed to get the status of custom script: {script_run_id}'
         logging.exception(msg)
         response.status_code = 400
         return ErrorResponse(message=f'{msg}. {traceback.format_exc()}')
 
 
-@prefix_router.post('/custom_script/halt',
+@prefix_router.post('/custom_script/{script_run_id}/halt',
                     status_code=204,
                     responses={
                         400: {'model': ErrorResponse},
@@ -667,22 +667,21 @@ def script_status(body: ScriptStatusBodyModel, response: Response):
                         403: {'model': ErrorResponse}
                     },
                     summary='Halt custom script specified',
-                    tags=['SCRIPT']    
-                )
-def script_halt(body: ScriptHaltBodyModel, response: Response):
+                    tags=['SCRIPT']
+                    )
+def script_halt(script_run_id, response: Response):
     try:
-        venue_core.halt_custom_script(script_run_id=body.scriptRunId)
+        venue_core.halt_custom_script(script_run_id=script_run_id)
         return Response(status_code=204)
-    
+
     except Exception as e:
-        msg = f'Failed to halt custom script: {body.scriptRunId}'
+        msg = f'Failed to halt custom script: {script_run_id}'
         logging.exception(msg)
         response.status_code = 400
         return ErrorResponse(message=f'{msg}. {traceback.format_exc()}')
 
 
 @prefix_router.get('/custom_script/{script_run_id}/files',
-                    response_class=FileResponse,
                     responses={
                         200: {'content': {'application/gzip': {}}},
                         400: {'model': ErrorResponse},
@@ -782,10 +781,10 @@ async def log_request(request: Request, call_next):
     return response
 
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request, exc):
-    error_json_str = json.dumps(exc.json(indent=None))
-    return JSONResponse(status_code=400, 
-        content={'message': str(exc)})
+async def validation_exception_handler(request: Request, exc:RequestValidationError):
+    error_payload = {"detail": exc.errors()}
+    return JSONResponse(status_code=400,
+        content=error_payload)
 
 
 ### OPENAPI ###
@@ -839,9 +838,9 @@ def custom_openapi():
         if app.openapi_schema:
             return app.openapi_schema
         openapi_schema = get_openapi(
-            title='Ingenium VenueServer',
-            version='14.1-TP',
-            description='RESTful API of Ingenium VenueServer that interfaces with test venues',
+            title='Ingenium Venue Agent AMPCS',
+            version='15.0',
+            description='RESTful API of Ingenium Venue Agent (AMPCS) that interfaces with test venues',
             routes=app.routes,
             tags=tags_metadata
         )
@@ -862,7 +861,7 @@ def custom_openapi():
 app.openapi = custom_openapi
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Ingenium VenueServer', 
+    parser = argparse.ArgumentParser(description='Ingenium Venue Agent AMPCS',
         prog='main.py',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--port', '-p', type=int, default=19443,

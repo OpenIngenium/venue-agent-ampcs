@@ -43,6 +43,28 @@ _bus_1553_logfile_path= get_env("BUS_1553_LOGFILE_PATH")
 _logfile_1553_dictionary_file_path = get_env("LOGFILE_1553_DICTIONARY_FILE_PATH")
 _irig_source= get_env("IRIG_SOURCE")
 
+
+def _load_json_with_retry(path: str, max_attempts: int = 5, delay: float = 0.1):
+    """
+    This function will retry the loading of a json file (specifically output.json) in case it is being actively written
+    to when the load attempt starts.
+
+    """
+
+    attempt = 0
+    while attempt < max_attempts:
+        try:
+            with open(path, 'r') as file:
+                data = json.load(file)
+                return data
+        except json.JSONDecodeError as er:
+            msg = f"JSON decode failed on attempt {attempt + 1}/{max_attempts} for {path}: {er} - retrying"
+            logger.debug(msg)
+        attempt += 1
+        time.sleep(delay * (2 * attempt))
+    raise RuntimeError(f"unable to read a consistent JSON file from {path}")
+
+
 def core_start_mtak (sessionIds, defaultCmdString, timeout):
   '''
 
@@ -1369,15 +1391,13 @@ def get_custom_script_status(script_run_id):
       pid_is_alive = True    
 
   # extract outputs from outputs dir
-  with open(output_dir, 'r') as f:
-    try:
-      output_json = json.load(f)
-    except Exception as ex:
-      msg = f'Error when parsing the script output file. Error: {ex}'
-      logger.error(msg)
-      raise Exception(msg)
+  try:
+    output_json = _load_json_with_retry(output_dir, 10, 0.1)
+  except Exception as ex:
+    msg = f'Error when parsing the script output file. Error: {ex}'
+    logger.error(msg)
+    raise Exception(msg)
 
-  logger.debug(f'Output file content: {output_json}')
 
   # extract script status & outputs from output json 
   script_status = output_json.get('custom_script_status')

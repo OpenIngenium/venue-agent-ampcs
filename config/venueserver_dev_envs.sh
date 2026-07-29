@@ -1,17 +1,17 @@
 #!/bin/bash
 # VENUE SERVER
-export ING_VENUE_DIR=/home/hongmank/github/venueserver2
-export ING_MTAK_DIR=/home/hongmank/github/mtak/r8.x/python
-export ING_LOG_DIR=/home/hongmank/github/venueserver2
+export ING_VENUE_DIR=/home/ing-user/github/venue-agent-ampcs
+# Note Ingenium MTAK is not required if using AMPCS version >= 9.1
+export ING_MTAK_DIR=/home/ing-user/github/mtak/r8.x/python
+export ING_LOG_DIR=/home/ing-user/github/venue-agent-ampcs
 # Custom Script
-export CUSTOM_SCRIPT_BASE_DIR=/proj/europa/sit
+export CUSTOM_SCRIPT_BASE_DIR=/home/ing-user/custom_scripts
 # GLAD
 # if LAD_HOST is not set, it will default to HOSTNAME env variable
 # export LAD_HOST=
 export LAD_PORT=8887
 export LAD_HTTPS=true
 # Bus 1553 Step
-# 1553 step is not used for Europa
 export BUS_1553_LOGFILE_PATH=
 export LOGFILE_1553_DICTIONARY_FILE_PATH=
 export IRIG_SOURCE='false'
