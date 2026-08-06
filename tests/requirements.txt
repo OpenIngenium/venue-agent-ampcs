@@ -1,4 +1,8 @@
 pytest
+pytest-mock
+pytest-timeout
+pytest-cov
+fakeredis
 requests
 PyJWT==1.7.0
 cryptography==2.4.2
