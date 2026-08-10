@@ -97,7 +97,7 @@ prefix_router = APIRouter(prefix='/api/v3')
 
 
 def check_default_cmd_string(default_cmd_string):
-  s = ''.join(default_cmd_string)
+  s = default_cmd_string.encode().decode()
   # if string_id is value 'default' set string_id to None. Else, proceed with input string id
   if s in ['A', 'B', 'AB']:
     return s
