@@ -178,6 +178,7 @@ def shutdown_mtak(response: Response):
                 )
 def fsw_cmd(body: FswCmdBodyModel, response: Response):
     try:
+        print("DEBUG", repr(body.stringSelection), repr(getattr(body.stringSelection, 'value', None)))
         string_selection = check_default_cmd_string(body.stringSelection.value)
 
         cmdRequested, dispatchTime = venue_core.core_send_fsw_cmd(sessionId=body.sessionId,
@@ -206,6 +207,7 @@ def fsw_cmd(body: FswCmdBodyModel, response: Response):
                 )
 def hw_cmd(body: HwCmdBodyModel, response: Response):
     try:
+        print("DEBUG", repr(body.stringSelection), repr(getattr(body.stringSelection, 'value', None)))
         string_selection = check_default_cmd_string(body.stringSelection.value)
 
         cmdRequested, dispatchTime = venue_core.core_send_hw_cmd(sessionId=body.sessionId,
