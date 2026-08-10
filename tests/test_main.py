@@ -129,7 +129,7 @@ def test_fsw_cmd_default_string(auth_client, mocker):
     main.venue_core.core_send_fsw_cmd.assert_called_once()
     call = main.venue_core.core_send_fsw_cmd.call_args
     print("CALL", call, type(call), call.kwargs, call.kwargs.get("stringSelection") if hasattr(call, "kwargs") else "n/a")
-    assert call.kwargs.get("stringSelection") is None
+    assert call[1].get("stringSelection") is None
 
 
 def test_fsw_cmd_explicit_string(auth_client, mocker):
@@ -149,7 +149,7 @@ def test_fsw_cmd_explicit_string(auth_client, mocker):
     assert resp.status_code == 200
     call = main.venue_core.core_send_fsw_cmd.call_args
     print("CALL", call, type(call), call.kwargs, call.kwargs.get("stringSelection") if hasattr(call, "kwargs") else "n/a")
-    assert call.kwargs.get("stringSelection") == "A"
+    assert call[1].get("stringSelection") == "A"
 
 
 def test_fsw_cmd_error(auth_client, mocker):
@@ -197,7 +197,7 @@ def test_hw_cmd_default_string(auth_client, mocker):
     }
     auth_client.post("/api/v3/cmd/hw_cmd", json=payload)
     call = main.venue_core.core_send_hw_cmd.call_args
-    assert call.kwargs.get("stringSelection") is None
+    assert call[1].get("stringSelection") is None
 
 
 def test_hw_cmd_error(auth_client, mocker):
