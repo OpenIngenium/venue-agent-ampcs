@@ -97,9 +97,10 @@ prefix_router = APIRouter(prefix='/api/v3')
 
 
 def check_default_cmd_string(default_cmd_string):
+  s = str(default_cmd_string)
   # if string_id is value 'default' set string_id to None. Else, proceed with input string id
-  if default_cmd_string in ['A', 'B', 'AB']:
-    return default_cmd_string
+  if s in ['A', 'B', 'AB']:
+    return s
   else:
     return None
 
@@ -178,8 +179,8 @@ def shutdown_mtak(response: Response):
                 )
 def fsw_cmd(body: FswCmdBodyModel, response: Response):
     try:
-        print("DEBUG", repr(body.stringSelection), repr(getattr(body.stringSelection, 'value', None)))
-        string_selection = check_default_cmd_string(body.stringSelection.value)
+        print("DEBUG", type(body.stringSelection), repr(body.stringSelection), type(body.stringSelection.value), repr(body.stringSelection.value))
+        string_selection = check_default_cmd_string(body.stringSelection)
 
         cmdRequested, dispatchTime = venue_core.core_send_fsw_cmd(sessionId=body.sessionId,
                                     validate=body.validate_,
@@ -207,8 +208,8 @@ def fsw_cmd(body: FswCmdBodyModel, response: Response):
                 )
 def hw_cmd(body: HwCmdBodyModel, response: Response):
     try:
-        print("DEBUG", repr(body.stringSelection), repr(getattr(body.stringSelection, 'value', None)))
-        string_selection = check_default_cmd_string(body.stringSelection.value)
+        print("DEBUG", type(body.stringSelection), repr(body.stringSelection), type(body.stringSelection.value), repr(body.stringSelection.value))
+        string_selection = check_default_cmd_string(body.stringSelection)
 
         cmdRequested, dispatchTime = venue_core.core_send_hw_cmd(sessionId=body.sessionId,
                                     cmdStem=body.commandStem,
