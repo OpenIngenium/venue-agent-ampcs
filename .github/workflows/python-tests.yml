@@ -9,7 +9,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest  # Safely uses the modern GitHub-hosted runner
+    runs-on: ubuntu-22.04 # Last version of ubuntu that supports python 3.7
     strategy:
       fail-fast: false
       matrix:
