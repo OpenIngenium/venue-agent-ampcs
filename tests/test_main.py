@@ -128,6 +128,7 @@ def test_fsw_cmd_default_string(auth_client, mocker):
     # because the route maps DEFAULT to None.
     main.venue_core.core_send_fsw_cmd.assert_called_once()
     call = main.venue_core.core_send_fsw_cmd.call_args
+    print("CALL", call, type(call), call.kwargs, call.kwargs.get("stringSelection") if hasattr(call, "kwargs") else "n/a")
     assert call.kwargs.get("stringSelection") is None
 
 
@@ -147,6 +148,7 @@ def test_fsw_cmd_explicit_string(auth_client, mocker):
     resp = auth_client.post("/api/v3/cmd/fsw_cmd", json=payload)
     assert resp.status_code == 200
     call = main.venue_core.core_send_fsw_cmd.call_args
+    print("CALL", call, type(call), call.kwargs, call.kwargs.get("stringSelection") if hasattr(call, "kwargs") else "n/a")
     assert call.kwargs.get("stringSelection") == "A"
 
 
