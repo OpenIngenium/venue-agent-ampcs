@@ -1,7 +1,7 @@
 fastapi==0.83.0
 uvicorn==0.16.0
 pyaml-env==1.2.2
-pyjwt==2.6.0
+pyjwt==2.4.0
 redis==4.3.6
 tailer==0.4.1
 bitstring==3.1.9
