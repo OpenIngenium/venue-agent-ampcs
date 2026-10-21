@@ -1,52 +1,26 @@
 # How to run tests
 
-VenueServer tests use `pytest`.
+VenueServer tests use `pytest` and run entirely locally: no AMPCS/WSTS session,
+MTAK installation, or Redis server is required. The `mtak` and `lad` packages are
+stubbed, Redis is replaced with `fakeredis`, and a throwaway RSA key pair is
+generated in memory for JWT authentication (see `tests/_jwt_env.py` and
+`tests/conftest.py`).
 
-VenueServer tests requires live AMPCS sessions that need to be started manually.
-
-The tests have different inputs for different missions. Currently they can be run on Europa or Psyche WSTS.
-
-## Set up Python virtual environment. (One Time Set up)
-```
-cd tests
-virtualenv -p python3 ve3
-source ve3/bin/activate.csh
-pip install -r requirements.txt
-deactivate
-```
-
-## Activate virtual environment
+## Set up a Python virtual environment
 
 ```
-cd tests
-source ve3/bin/activate.csh
-```
-
-## Start WSTS
-
-Start two WSTS sessions. Each WSTS session will have an AMPCS session.
-
-Set the AMPCS sessions in `env.csh` and source it.
-
-```
-source env.csh
+python3 -m venv ve3
+source ve3/bin/activate
+pip install -r requirements.txt -r tests/requirements.txt
 ```
 
 ## Run tests
 
-Run pytest
-```
-pytest
-```
-
-To see debug outputs, disable stdout capture.
-```
-pytest -s
-```
-
-You can run a individual test.
+From the repository root:
 
 ```
-pytest test_mtak.py
-pytest test_mtak.py::test_start_shutdown
+python -m pytest tests/
 ```
+
+The same command runs in GitHub Actions on Python 3.6 - 3.10
+(`.github/workflows/python-tests.yml`).

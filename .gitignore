@@ -1,1 +1,5 @@
 /.idea
+__pycache__/
+.pytest_cache/
+# Deployment JWT public key (provisioned per venue, never committed)
+exec_venue_public_pem.pem

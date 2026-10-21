@@ -49,7 +49,7 @@ def test_start_custom_script_success(auth_client: TestClient):
 
 
 @pytest.mark.timeout(35)
-def test_start_custom_script_abs_path(auth_client: TestClient):
+def test_start_custom_script_abs_path(auth_client: TestClient, tmp_path):
     """
     Off-nominal test for /api/v3/custom_script/start (bad path)
 
@@ -58,21 +58,20 @@ def test_start_custom_script_abs_path(auth_client: TestClient):
     script_path = Path(__file__).parent / "custom_script_for_tests" / "custom_script_for_tests.py"
     assert script_path.is_file(), f"Script not found: {script_path}"
 
-    tmp_path = Path("/tmp/venue_agent_test/custom_script_for_tests.py")
+    outside_script = tmp_path / "custom_script_for_tests.py"
 
-    os.makedirs('/tmp/venue_agent_test', exist_ok=True)
-
-    shutil.copyfile(script_path, tmp_path)
-    os.chmod(tmp_path, 0o777)
-    assert tmp_path.is_file(), f"Script not found: {script_path}"
+    shutil.copyfile(script_path, outside_script)
+    os.chmod(outside_script, 0o777)
+    assert outside_script.is_file(), f"Script not found: {outside_script}"
+    request_path = str(outside_script)
 
     inputs = {'inputs': {'duration': 30,
                          'script_result': 'PASS'}}
 
     payload = {
         "scriptName": "custom_script_for_tests",
-        "scriptPath": str(tmp_path),
-        "scriptHash": _sha256(tmp_path),
+        "scriptPath": request_path,
+        "scriptHash": _sha256(outside_script),
         "inputs": inputs,    # No inputs needed for this script.
         "outputs": {"custom_script_status": "PENDING"}
     }
@@ -85,7 +84,7 @@ def test_start_custom_script_abs_path(auth_client: TestClient):
 
 
 @pytest.mark.timeout(35)
-def test_start_custom_script_rel_bad_path(auth_client: TestClient):
+def test_start_custom_script_rel_bad_path(auth_client: TestClient, tmp_path):
     """
     Off-nominal test for /api/v3/custom_script/start (bad relative path)
 
@@ -94,21 +93,22 @@ def test_start_custom_script_rel_bad_path(auth_client: TestClient):
     script_path = Path(__file__).parent / "custom_script_for_tests" / "custom_script_for_tests.py"
     assert script_path.is_file(), f"Script not found: {script_path}"
 
-    tmp_path = Path("../../../../../tmp/venue_agent_test/custom_script_for_tests.py")
+    outside_script = tmp_path / "custom_script_for_tests.py"
 
-    os.makedirs('/tmp/venue_agent_test', exist_ok=True)
-
-    shutil.copyfile(script_path, tmp_path)
-    os.chmod(tmp_path, 0o777)
-    assert tmp_path.is_file(), f"Script not found: {script_path}"
+    shutil.copyfile(script_path, outside_script)
+    os.chmod(outside_script, 0o777)
+    assert outside_script.is_file(), f"Script not found: {outside_script}"
+    # Relative path that escapes the base dir and resolves to the copied script
+    request_path = os.path.relpath(outside_script, os.environ["CUSTOM_SCRIPT_BASE_DIR"])
+    assert request_path.startswith(".."), request_path
 
     inputs = {'inputs': {'duration': 30,
                          'script_result': 'PASS'}}
 
     payload = {
         "scriptName": "custom_script_for_tests",
-        "scriptPath": str(tmp_path),
-        "scriptHash": _sha256(tmp_path),
+        "scriptPath": request_path,
+        "scriptHash": _sha256(outside_script),
         "inputs": inputs,  # No inputs needed for this script.
         "outputs": {"custom_script_status": "PENDING"}
     }
@@ -121,7 +121,7 @@ def test_start_custom_script_rel_bad_path(auth_client: TestClient):
 
 
 @pytest.mark.timeout(35)
-def test_start_custom_script_home_bad_path(auth_client: TestClient):
+def test_start_custom_script_home_bad_path(auth_client: TestClient, tmp_path, monkeypatch):
     """
     Off-nominal test for /api/v3/custom_script/start (home directory)
 
@@ -130,22 +130,22 @@ def test_start_custom_script_home_bad_path(auth_client: TestClient):
     script_path = Path(__file__).parent / "custom_script_for_tests" / "custom_script_for_tests.py"
     assert script_path.is_file(), f"Script not found: {script_path}"
 
-    tmp_path = Path("~/tmp/venue_agent_test/custom_script_for_tests.py")
+    monkeypatch.setenv("HOME", str(tmp_path))
+    outside_script = Path.home() / "tmp" / "venue_agent_test" / "custom_script_for_tests.py"
+    outside_script.parent.mkdir(parents=True, exist_ok=True)
 
-    if not os.path.exists('~/tmp/venue_agent_test'):
-        os.makedirs('~/tmp/venue_agent_test/', exist_ok=True)
-
-    shutil.copyfile(script_path, tmp_path)
-    os.chmod(tmp_path, 0o777)
-    assert tmp_path.is_file(), f"Script not found: {script_path}"
+    shutil.copyfile(script_path, outside_script)
+    os.chmod(outside_script, 0o777)
+    assert outside_script.is_file(), f"Script not found: {outside_script}"
+    request_path = "~/tmp/venue_agent_test/custom_script_for_tests.py"
 
     inputs = {'inputs': {'duration': 30,
                          'script_result': 'PASS'}}
 
     payload = {
         "scriptName": "custom_script_for_tests",
-        "scriptPath": str(tmp_path),
-        "scriptHash": _sha256(tmp_path),
+        "scriptPath": request_path,
+        "scriptHash": _sha256(outside_script),
         "inputs": inputs,  # No inputs needed for this script.
         "outputs": {"custom_script_status": "PENDING"}
     }
@@ -332,8 +332,6 @@ def test_custom_script_halt(auth_client: TestClient):
     data = response.json()
     assert "scriptRunId" in data, "Response JSON missing 'scriptRunId'"
 
-    time.sleep(10)
-
     script_run_id = data["scriptRunId"]
 
     script_status = ""
@@ -454,8 +452,6 @@ def test_custom_script_large_response(auth_client: TestClient):
     )
     data = response.json()
     assert "scriptRunId" in data, "Response JSON missing 'scriptRunId'"
-
-    time.sleep(20)
 
     script_run_id = data["scriptRunId"]
 
@@ -589,7 +585,7 @@ def test_custom_script_heavy_writes_limited_wait(auth_client: TestClient):
     assert script_status == "PASS", (f"Unexpected script completion status {script_status}")
 
 
-def test_start_custom_script_expired(auth_client: TestClient, expired_jwt_token):
+def test_start_custom_script_expired(auth_client: TestClient, expired_jwt):
     """
     Off-nominal test for /api/v3/custom_script/start
     With an expired JWT Token
@@ -608,14 +604,14 @@ def test_start_custom_script_expired(auth_client: TestClient, expired_jwt_token)
         "outputs": {"custom_script_status": "PENDING"}
     }
 
-    response = auth_client.post("/api/v3/custom_script/start", json=payload, headers={"Authorization": f"Bearer {expired_jwt_token}"})
+    response = auth_client.post("/api/v3/custom_script/start", json=payload, headers={"Authorization": f"Bearer {expired_jwt}"})
 
-    assert response.status_code == 403, (
+    assert response.status_code == 401, (
         f"Unexpected status {response.status_code}: {response.text}"
     )
 
 
-def test_start_custom_script_unauthorized(auth_client, no_scope_jwt_token):
+def test_start_custom_script_unauthorized(auth_client, unauthorized_jwt):
     """
     Off-nominal test for /api/v3/custom_script/start
     With a JWT Token that lackes the permissions
@@ -634,9 +630,9 @@ def test_start_custom_script_unauthorized(auth_client, no_scope_jwt_token):
         "outputs": {"custom_script_status": "PENDING"}
     }
 
-    response = auth_client.post("/api/v3/custom_script/start", json=payload, headers={"Authorization": f"Bearer {no_scope_jwt_token}"})
+    response = auth_client.post("/api/v3/custom_script/start", json=payload, headers={"Authorization": f"Bearer {unauthorized_jwt}"})
 
-    assert response.status_code == 401, (
+    assert response.status_code == 403, (
         f"Unexpected status {response.status_code}: {response.text}"
     )
 
@@ -743,7 +739,7 @@ def test_start_custom_script_no_hash(auth_client: TestClient):
 
 
 @pytest.mark.timeout(35)
-def test_status_custom_script_expired(auth_client: TestClient, expired_jwt_token):
+def test_status_custom_script_expired(auth_client: TestClient, expired_jwt):
     """
     Off-nominal test for /api/v3/custom_script/
     With an expired JWT Token
@@ -774,15 +770,15 @@ def test_status_custom_script_expired(auth_client: TestClient, expired_jwt_token
 
     script_status = ""
 
-    response = auth_client.get(f"/api/v3/custom_script/{script_run_id}", headers={"Authorization": f"Bearer {expired_jwt_token}"})
+    response = auth_client.get(f"/api/v3/custom_script/{script_run_id}", headers={"Authorization": f"Bearer {expired_jwt}"})
 
-    assert response.status_code == 403, (
+    assert response.status_code == 401, (
         f"Unexpected status {response.status_code}: {response.text}"
     )
 
 
 @pytest.mark.timeout(35)
-def test_status_custom_script_unauthorized(auth_client: TestClient, no_scope_jwt_token):
+def test_status_custom_script_unauthorized(auth_client: TestClient, unauthorized_jwt):
     """
     Off-nominal test for /api/v3/custom_script/
     With a JWT Token without the correct permissions
@@ -814,15 +810,15 @@ def test_status_custom_script_unauthorized(auth_client: TestClient, no_scope_jwt
     script_status = ""
 
     response = auth_client.get(f"/api/v3/custom_script/{script_run_id}",
-                               headers={"Authorization": f"Bearer {no_scope_jwt_token}"})
+                               headers={"Authorization": f"Bearer {unauthorized_jwt}"})
 
-    assert response.status_code == 401, (
+    assert response.status_code == 403, (
         f"Unexpected status {response.status_code}: {response.text}"
     )
 
 
 @pytest.mark.timeout(60)
-def test_custom_script_halt_unauthorized(auth_client: TestClient, no_scope_jwt_token):
+def test_custom_script_halt_unauthorized(auth_client: TestClient, unauthorized_jwt):
     """
     Off-nominal test for /api/v3/custom_script/halt
     With a JWT token lacking the correct permissions
@@ -849,8 +845,6 @@ def test_custom_script_halt_unauthorized(auth_client: TestClient, no_scope_jwt_t
     data = response.json()
     assert "scriptRunId" in data, "Response JSON missing 'scriptRunId'"
 
-    time.sleep(10)
-
     script_run_id = data["scriptRunId"]
 
     script_status = ""
@@ -868,15 +862,15 @@ def test_custom_script_halt_unauthorized(auth_client: TestClient, no_scope_jwt_t
 
     assert script_status == "PENDING", (f"Unexpected script completion status {script_status}")
 
-    response = auth_client.post(f"/api/v3/custom_script/{script_run_id}/halt", headers={"Authorization": f"Bearer {no_scope_jwt_token}"})
+    response = auth_client.post(f"/api/v3/custom_script/{script_run_id}/halt", headers={"Authorization": f"Bearer {unauthorized_jwt}"})
 
-    assert response.status_code == 401, (
+    assert response.status_code == 403, (
         f"Unexpected status {response.status_code}: {response.text}"
     )
 
 
 @pytest.mark.timeout(60)
-def test_custom_script_halt_expired(auth_client: TestClient, expired_jwt_token):
+def test_custom_script_halt_expired(auth_client: TestClient, expired_jwt):
     """
     Off-nominal test for /api/v3/custom_script/halt
     With an expired JWT Token
@@ -903,8 +897,6 @@ def test_custom_script_halt_expired(auth_client: TestClient, expired_jwt_token):
     data = response.json()
     assert "scriptRunId" in data, "Response JSON missing 'scriptRunId'"
 
-    time.sleep(10)
-
     script_run_id = data["scriptRunId"]
 
     script_status = ""
@@ -922,15 +914,15 @@ def test_custom_script_halt_expired(auth_client: TestClient, expired_jwt_token):
 
     assert script_status == "PENDING", (f"Unexpected script completion status {script_status}")
 
-    response = auth_client.post(f"/api/v3/custom_script/{script_run_id}/halt", headers={"Authorization": f"Bearer {expired_jwt_token}"})
+    response = auth_client.post(f"/api/v3/custom_script/{script_run_id}/halt", headers={"Authorization": f"Bearer {expired_jwt}"})
 
-    assert response.status_code == 403, (
+    assert response.status_code == 401, (
         f"Unexpected status {response.status_code}: {response.text}"
     )
 
 
 @pytest.mark.timeout(45)
-def test_custom_script_files_unauthorized(auth_client: TestClient, no_scope_jwt_token):
+def test_custom_script_files_unauthorized(auth_client: TestClient, unauthorized_jwt):
     """
     Off-nominal test for /api/v3/custom_script/files
     With a JWT token that lacks permission
@@ -975,13 +967,13 @@ def test_custom_script_files_unauthorized(auth_client: TestClient, no_scope_jwt_
 
     assert script_status == "PASS", (f"Unexpected script completion status {script_status}")
 
-    files = auth_client.get(f"/api/v3/custom_script/{script_run_id}/files", headers={"Authorization": f"Bearer {no_scope_jwt_token}"} )
+    files = auth_client.get(f"/api/v3/custom_script/{script_run_id}/files", headers={"Authorization": f"Bearer {unauthorized_jwt}"} )
 
-    assert files.status_code == 401, f"Unexpected status {files.status_code}: {files.text}"
+    assert files.status_code == 403, f"Unexpected status {files.status_code}: {files.text}"
 
 
 @pytest.mark.timeout(45)
-def test_custom_script_files_expired(auth_client: TestClient, expired_jwt_token):
+def test_custom_script_files_expired(auth_client: TestClient, expired_jwt):
     """
     Off-nominal test for /api/v3/custom_script/files
     With an expired JWT Token
@@ -1026,7 +1018,7 @@ def test_custom_script_files_expired(auth_client: TestClient, expired_jwt_token)
 
     assert script_status == "PASS", (f"Unexpected script completion status {script_status}")
 
-    files = auth_client.get(f"/api/v3/custom_script/{script_run_id}/files", headers={"Authorization": f"Bearer {expired_jwt_token}"})
+    files = auth_client.get(f"/api/v3/custom_script/{script_run_id}/files", headers={"Authorization": f"Bearer {expired_jwt}"})
 
-    assert files.status_code == 403, f"Unexpected status {files.status_code}: {files.text}"
+    assert files.status_code == 401, f"Unexpected status {files.status_code}: {files.text}"
 

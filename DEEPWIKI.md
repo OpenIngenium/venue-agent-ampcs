@@ -414,7 +414,8 @@ GET /api/v3/custom_script/{id}/files → tar.gz workspace
 
 - Framework: **pytest**
 - Test deps: `pytest`, `pytest-mock`, `pytest-timeout`, `pytest-cov`, `fakeredis`, `requests`
-- Live AMPCS sessions are required for full integration tests (see `tests/README.md`).
+- Runs fully locally with `python -m pytest tests/` — no AMPCS/WSTS session, MTAK, or Redis needed (see `tests/README.md`).
+- `tests/_jwt_env.py` stubs `mtak`/`lad` and generates an in-memory RSA key pair; the real `exec_venue_public_pem.pem` is never read or written.
 - Fixtures in `tests/conftest.py` provide `fake_redis`, JWT tokens, and `TestClient` instances.
 - `tests/core/` contains unit tests for each core module.
 - `tests/test_main.py` uses mocked `core` functions to exercise routes.
@@ -478,8 +479,7 @@ curl https://<hostname>.jpl.nasa.gov:9443/api/v3/health
 6. **MTAK `SystemExit`** — Caught and converted to exceptions with the last log error appended.
 7. **Custom script output race** — `_load_json_with_retry()` retries up to 5 times if `output.json` is being written.
 8. **1553 logs** — Currently used for Psyche; paths and dictionaries come from environment variables.
-9. **Test fixture names** — `expired_jwt_token` and `no_scope_jwt_token` are named confusingly; see `tests/conftest.py`.
-10. **Python 3.6** — Deployment venv is created with `python3.6`; CI tests 3.6–3.10.
+9. **Python 3.6** — Deployment venv is created with `python3.6`; CI tests 3.6–3.10.
 
 ---
 
