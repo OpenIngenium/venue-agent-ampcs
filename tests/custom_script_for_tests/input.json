@@ -1,0 +1,11 @@
+{
+    "username": "Ingenium will fill this in with the test conductors user name",
+    "inputs":  {
+                "duration": 60,
+                "exception_time": "",
+                "script_result": "PASS",
+                "input_random_data": "fsd;lfds;lhfdsljfhdsfds7fsdkjfhsdkjlhbw4lkjhblkjnfsd.kjbhgfldskjgblkasglkjszdnbds;lghds;ghsd;glkhds;glkhng;ldshgp98sdygspd98ghzlxkvnxz;lihgxzp98ygh;oigvn;xlkvn;xovhxz;ohvxz;ihgvxp98ghs;lhgbzs.gbvzx;lhgvszdp9ghzsk;bvbgvszdliuglsdizggbgzs.b",
+                "output_random_data": 10000000,
+                "heavy_writes": "true"
+                }
+}

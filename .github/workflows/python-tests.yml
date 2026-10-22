@@ -1,0 +1,46 @@
+name: Python tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04 # Last version of ubuntu that supports python 3.7
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
+
+        # Configure a Docker container specifically for Python 3.6
+        include:
+          - python-version: '3.6'
+            container: 'python:3.6-slim'
+
+    # Dynamically applies the container only for Python 3.6
+    container: ${{ matrix.container }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        if: matrix.python-version != '3.6'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt -r tests/requirements.txt
+
+      - name: Run pytest
+        run: python -m pytest tests/ -q --tb=short
